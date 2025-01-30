@@ -23,4 +23,9 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginForm form) {
         return new ResponseEntity<>(authService.authenticate(form), HttpStatus.OK);
     }
+
+    @GetMapping("/otp")
+    public ResponseEntity<?> otp(@RequestParam String email) {
+        return new ResponseEntity<>(authService.sendOTP(email), HttpStatus.OK);
+    }
 }

@@ -1,20 +1,20 @@
 package com.DatNguyen.ImageGenerator.Service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 @Component
-@RequiredArgsConstructor
-public class EmailProcessor{
+@Service
+public class EmailService {
     @Autowired
     private JavaMailSender javaMailSender;
     @Value("${email}")
     private String from;
-    public void sendOTP(String to) {
+    public String sendOTP(String to) {
         SimpleMailMessage message = new SimpleMailMessage();
         String otp = String.valueOf(otpGenerator());
         String subject = "Account verification email";
@@ -23,6 +23,7 @@ public class EmailProcessor{
         message.setSubject(subject);
         message.setText(otp);
         javaMailSender.send(message);
+        return otp.toString();
     }
 
     private int otpGenerator() {

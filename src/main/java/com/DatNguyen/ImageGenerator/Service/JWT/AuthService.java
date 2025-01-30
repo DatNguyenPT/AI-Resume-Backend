@@ -2,6 +2,7 @@ package com.DatNguyen.ImageGenerator.Service.JWT;
 
 import com.DatNguyen.ImageGenerator.Entity.*;
 import com.DatNguyen.ImageGenerator.Repository.UserRepo;
+import com.DatNguyen.ImageGenerator.Service.EmailService;
 import com.DatNguyen.ImageGenerator.Service.UserSubscriptionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,10 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -30,6 +28,8 @@ public class AuthService {
     private UserSubscriptionService userSubscriptionService;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private EmailService emailService;
 
     public Map<String, String>createTokens(Users user) {
         String accessToken = jwtService.tokenGenerator(user);
@@ -93,6 +93,14 @@ public class AuthService {
         Map<String, String> tokens = createTokens(user);
 
         return new AuthenticationResponse(tokens);
+    }
+
+    public String sendOTP(String email) {
+        String otp = emailService.sendOTP(email);
+        if(otp.isEmpty()){
+            throw new RuntimeException("OTP could not be sent");
+        }
+        return otp;
     }
 
 }
