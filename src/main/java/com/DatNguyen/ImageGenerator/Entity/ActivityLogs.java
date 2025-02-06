@@ -1,5 +1,6 @@
 package com.DatNguyen.ImageGenerator.Entity;
 
+
 import jakarta.persistence.*;
 import lombok.Data;
 import java.sql.Timestamp;
