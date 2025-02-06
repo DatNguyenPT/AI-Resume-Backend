@@ -23,6 +23,8 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     private JWTService jwtService;
     @Autowired
     private UserDetailsService userDetailsService;
+    @Autowired
+    private BlackTokenService blackTokenService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException, ServletException, IOException {
@@ -37,6 +39,14 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         email = jwtService.extractEmail(jwt);
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null){
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
+
+            // Check if token is in black list
+            if(blackTokenService.isTokenBlacklisted(jwt)){
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.getWriter().write("Token has been blacklisted");
+                return;
+            }
+
             if (jwtService.isTokenValidate(jwt, userDetails)){
                 // Create an auth token
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

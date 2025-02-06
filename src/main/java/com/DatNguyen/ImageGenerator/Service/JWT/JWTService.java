@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +16,12 @@ import java.util.function.Function;
 
 @Service
 public class JWTService {
+    @Value("${jwt_secret_key}")
+    private String SECRET_KEY;
+
     // Secret Key
     private Key getSignInKey() {
-        return Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
     // Extract all claims
@@ -25,7 +29,7 @@ public class JWTService {
         return Jwts.parserBuilder()
                 .setSigningKey(getSignInKey())
                 .build()
-                .parseClaimsJwt(jwtToken)
+                .parseClaimsJws(jwtToken)
                 .getBody();
     }
 
@@ -41,20 +45,20 @@ public class JWTService {
     }
 
     // Token generate
-    public String tokenGenerator(Map<String, Object> extraClaims, UserDetails userDetails){
+    public String tokenGenerator(Map<String, Object> extraClaims, UserDetails userDetails, int time){
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 // Set token live
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 *24)) // 24 hours
+                .setExpiration(new Date(System.currentTimeMillis() + time)) // 24 hours
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256) // Algorithm for 256-bit hash
                 .compact(); // Generate and return token
     }
     // Overloading to make tokenGenerator easier to access (only UserDetails param)
-    public String tokenGenerator(UserDetails userDetails){
-        return tokenGenerator(new HashMap<>(), userDetails);
+    public String tokenGenerator(UserDetails userDetails, int time){
+        return tokenGenerator(new HashMap<>(), userDetails, time);
     }
 
     // Extract Expiration from specified claim

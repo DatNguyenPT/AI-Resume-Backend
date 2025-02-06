@@ -11,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -31,9 +32,17 @@ public class AuthService {
     @Autowired
     private EmailService emailService;
 
+    private final int accessTokenTTL = 1000 * 60 * 60 * 2;  // 2 hours
+    private final int refreshTokenTTL = 1000 * 60 * 60 * 24 * 7;  // 7 days
+
+    public Date getExpirationDate(String token) {
+        return jwtService.extractExpiration(token);
+    }
+
     public Map<String, String>createTokens(Users user) {
-        String accessToken = jwtService.tokenGenerator(user);
-        String refreshToken = jwtService.tokenGenerator(user);
+
+        String accessToken = jwtService.tokenGenerator(user, accessTokenTTL);
+        String refreshToken = jwtService.tokenGenerator(user, refreshTokenTTL);
         Map<String, String>tokens = new HashMap<>();
         tokens.put("access_token", accessToken);
         tokens.put("refresh_token", refreshToken);
