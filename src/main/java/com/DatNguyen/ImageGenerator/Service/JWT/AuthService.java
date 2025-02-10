@@ -55,7 +55,7 @@ public class AuthService {
         }
 
         if (!registerForm.getPassword().equals(registerForm.getRetypePassword())) {
-            throw new RuntimeException("Passwords do not match");
+            throw new RuntimeException("Passwords are not match");
         }
 
         String username = registerForm.getUsername();
