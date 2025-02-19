@@ -4,6 +4,8 @@ import com.DatNguyen.ImageGenerator.Entity.*;
 import com.DatNguyen.ImageGenerator.Repository.UserRepo;
 import com.DatNguyen.ImageGenerator.Service.EmailService;
 import com.DatNguyen.ImageGenerator.Service.UserSubscriptionService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,14 +34,15 @@ public class AuthService {
     @Autowired
     private EmailService emailService;
 
-    private final int accessTokenTTL = 1000 * 60 * 60 * 2;  // 2 hours
-    private final int refreshTokenTTL = 1000 * 60 * 60 * 24 * 7;  // 7 days
+    private final long accessTokenTTL = 1000L * 60 * 60 * 2;  // 2 hour
+    private final long refreshTokenTTL = 1000L * 60 * 60 * 24 * 30; // 30 days
+
 
     public Date getExpirationDate(String token) {
         return jwtService.extractExpiration(token);
     }
 
-    public Map<String, String>createTokens(Users user) {
+    private Map<String, String>createTokens(Users user) {
 
         String accessToken = jwtService.tokenGenerator(user, accessTokenTTL);
         String refreshToken = jwtService.tokenGenerator(user, refreshTokenTTL);
@@ -49,7 +52,29 @@ public class AuthService {
         return tokens;
     }
 
-    public AuthenticationResponse registration(RegisterForm registerForm){
+    private void storeToken(String accessToken, String refeshToken, HttpServletResponse response) {
+        int accessTokenTTLSeconds = (int) (accessTokenTTL / 1000);
+        int refreshTokenTTLSeconds = (int) (refreshTokenTTL / 1000);
+
+        Cookie accessTokenCookie = new Cookie("access_token", accessToken);
+        accessTokenCookie.setMaxAge(accessTokenTTLSeconds);
+        accessTokenCookie.setSecure(true);
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setPath("/auth");
+
+
+        response.addCookie(accessTokenCookie);
+
+        Cookie refreshTokenCookie = new Cookie("refresh_token", refeshToken);
+        refreshTokenCookie.setMaxAge(refreshTokenTTLSeconds);
+        refreshTokenCookie.setSecure(true);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setPath("/auth");
+
+        response.addCookie(refreshTokenCookie);
+    }
+
+    public AuthenticationResponse registration(RegisterForm registerForm, HttpServletResponse response){
         if(userRepo.findByEmail(registerForm.getEmail()) != null){
             throw new RuntimeException("Username already exists");
         }
@@ -71,7 +96,7 @@ public class AuthService {
         userRepo.save(newUser);
 
         try {
-            Thread.sleep(20 * 1000); // Delay for 20 seconds
+            Thread.sleep(10 * 1000); // Delay for 10 seconds
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
@@ -82,10 +107,16 @@ public class AuthService {
             throw new RuntimeException("User subscription could not be created");
         }
         Map<String, String> tokens = createTokens(newUser);
+        String accessToken = tokens.get("access_token");
+        String refreshToken = tokens.get("refresh_token");
+
+        storeToken(accessToken, refreshToken, response);
+
+
         return new AuthenticationResponse(tokens);
     }
 
-    public AuthenticationResponse authenticate(LoginForm loginForm) {
+    public AuthenticationResponse authenticate(LoginForm loginForm, HttpServletResponse response) {
         Users user = userRepo.findByEmail(loginForm.getEmail());
 
         if (user == null || !passwordEncoder.matches(loginForm.getPassword(), user.getPassword())) {
@@ -100,6 +131,10 @@ public class AuthService {
         );
 
         Map<String, String> tokens = createTokens(user);
+        String accessToken = tokens.get("access_token");
+        String refreshToken = tokens.get("refresh_token");
+
+        storeToken(accessToken, refreshToken, response);
 
         return new AuthenticationResponse(tokens);
     }

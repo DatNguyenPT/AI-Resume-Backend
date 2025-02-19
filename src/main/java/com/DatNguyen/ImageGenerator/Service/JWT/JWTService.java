@@ -45,7 +45,7 @@ public class JWTService {
     }
 
     // Token generate
-    public String tokenGenerator(Map<String, Object> extraClaims, UserDetails userDetails, int time){
+    public String tokenGenerator(Map<String, Object> extraClaims, UserDetails userDetails, long time){
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
@@ -57,7 +57,7 @@ public class JWTService {
                 .compact(); // Generate and return token
     }
     // Overloading to make tokenGenerator easier to access (only UserDetails param)
-    public String tokenGenerator(UserDetails userDetails, int time){
+    public String tokenGenerator(UserDetails userDetails, long time){
         return tokenGenerator(new HashMap<>(), userDetails, time);
     }
 
