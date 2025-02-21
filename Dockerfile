@@ -5,7 +5,7 @@ WORKDIR /ImageGenerator
 COPY pom.xml .
 COPY src ./src
 
-RUN mvn clean package -DskipTests
+RUN mvn clean package -Dmaven.test.skip=true -P cicd
 
 FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /ImageGenerator
