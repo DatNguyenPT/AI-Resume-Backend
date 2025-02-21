@@ -19,14 +19,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private static final String[] WHITE_LIST = {
-            "/swagger-ui/**",
-            "/swagger-resources/**",
+            // Swagger UI v3 (OpenAPI)
             "/swagger-ui.html",
+            "/swagger-ui/**",
             "/v3/api-docs/**",
             "/v3/api-docs.yaml",
+            "/v3/api-docs/public-apis",
+            "/swagger-resources/**",
             "/webjars/**",
+            // Other public endpoints
             "/auth/**",
-            "/h2-console/**",
+            "/h2-console/**"
     };
 
     @Autowired
@@ -40,7 +43,6 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(WHITE_LIST).permitAll()  // Allow Swagger & Auth
-
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -49,12 +51,4 @@ public class SecurityConfig {
 
         return httpSecurity.build();
     }
-
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().requestMatchers(
-                "/swagger-ui/", "/v3/api-docs/", "/swagger-ui.html"
-        );
-    }
-
 }

@@ -1,7 +1,22 @@
 package com.DatNguyen.ImageGenerator.Service;
 
-import com.DatNguyen.ImageGenerator.Repository.UserRepo;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.DatNguyen.ImageGenerator.Entity.Role;
+import com.DatNguyen.ImageGenerator.Entity.SubscriptionPlans;
+import com.DatNguyen.ImageGenerator.Entity.UserSubscriptions;
+import com.DatNguyen.ImageGenerator.Entity.Users;
+import com.DatNguyen.ImageGenerator.Repository.UserRepo;
+import com.DatNguyen.ImageGenerator.Repository.UserSubscriptionRepo;
+
+import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Disabled;
@@ -9,15 +24,25 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ContextConfiguration(classes = {UserSubscriptionService.class, UserRepo.class})
 @ExtendWith(SpringExtension.class)
+@DisabledInAotMode
 class UserSubscriptionServiceDiffblueTest {
     @Autowired
     private UserSubscriptionService userSubscriptionService;
+
+    @MockBean
+    private UserRepo userRepo;
+
+    @MockBean
+    private UserSubscriptionRepo userSubscriptionRepo;
 
     /**
      * Test {@link UserSubscriptionService#createNewUserSubscription(UUID, String)}.
@@ -95,5 +120,98 @@ class UserSubscriptionServiceDiffblueTest {
 
         // Arrange and Act
         userSubscriptionService.createNewUserSubscription(UUID.randomUUID(), "Payment Status");
+    }
+
+    /**
+     * Test {@link UserSubscriptionService#createNewUserSubscription(UUID, String)}.
+     * <p>
+     * Method under test: {@link UserSubscriptionService#createNewUserSubscription(UUID, String)}
+     */
+    @Test
+    @DisplayName("Test createNewUserSubscription(UUID, String)")
+    @Tag("MaintainedByDiffblue")
+    void testCreateNewUserSubscription2() {
+        // Arrange
+        SubscriptionPlans subscriptionPlan = new SubscriptionPlans();
+        subscriptionPlan.setMaxImages(3);
+        subscriptionPlan.setMaxResolution("Max Resolution");
+        subscriptionPlan.setPlanID(UUID.randomUUID());
+        subscriptionPlan.setPlanName("Plan Name");
+        subscriptionPlan.setPrice(10.0f);
+
+        SubscriptionPlans subscriptionPlan2 = new SubscriptionPlans();
+        subscriptionPlan2.setMaxImages(3);
+        subscriptionPlan2.setMaxResolution("Max Resolution");
+        subscriptionPlan2.setPlanID(UUID.randomUUID());
+        subscriptionPlan2.setPlanName("Plan Name");
+        subscriptionPlan2.setPrice(10.0f);
+
+        Users user = new Users();
+        user.setCreatedAt(mock(Timestamp.class));
+        user.setEmail("jane.doe@example.org");
+        user.setGeneratedImages(new HashSet<>());
+        user.setHashedPassword("iloveyou");
+        user.setLastLogin(mock(Timestamp.class));
+        user.setRole(Role.FREE);
+        user.setSubscription(new UserSubscriptions());
+        user.setUserID(UUID.randomUUID());
+        user.setUsername("janedoe");
+        user.setVerified(true);
+
+        UserSubscriptions subscription = new UserSubscriptions();
+        subscription.setEndDate(mock(Timestamp.class));
+        subscription.setPaymentStatus("Payment Status");
+        subscription.setStartDate(mock(Timestamp.class));
+        subscription.setSubscriptionID(UUID.randomUUID());
+        subscription.setSubscriptionPlan(subscriptionPlan2);
+        subscription.setUser(user);
+
+        Users user2 = new Users();
+        user2.setCreatedAt(mock(Timestamp.class));
+        user2.setEmail("jane.doe@example.org");
+        user2.setGeneratedImages(new HashSet<>());
+        user2.setHashedPassword("iloveyou");
+        user2.setLastLogin(mock(Timestamp.class));
+        user2.setRole(Role.FREE);
+        user2.setSubscription(subscription);
+        user2.setUserID(UUID.randomUUID());
+        user2.setUsername("janedoe");
+        user2.setVerified(true);
+
+        UserSubscriptions subscription2 = new UserSubscriptions();
+        subscription2.setEndDate(mock(Timestamp.class));
+        subscription2.setPaymentStatus("Payment Status");
+        subscription2.setStartDate(mock(Timestamp.class));
+        subscription2.setSubscriptionID(UUID.randomUUID());
+        subscription2.setSubscriptionPlan(subscriptionPlan);
+        subscription2.setUser(user2);
+
+        Users users = new Users();
+        users.setCreatedAt(mock(Timestamp.class));
+        users.setEmail("jane.doe@example.org");
+        users.setGeneratedImages(new HashSet<>());
+        users.setHashedPassword("iloveyou");
+        users.setLastLogin(mock(Timestamp.class));
+        users.setRole(Role.FREE);
+        users.setSubscription(subscription2);
+        users.setUserID(UUID.randomUUID());
+        users.setUsername("janedoe");
+        users.setVerified(true);
+        when(userRepo.findByUserID(Mockito.<UUID>any())).thenReturn(users);
+        when(userSubscriptionRepo.getPlanID(Mockito.<String>any())).thenReturn(UUID.randomUUID());
+        doNothing().when(userSubscriptionRepo)
+                .upsertSubscription(Mockito.<UUID>any(), Mockito.<UUID>any(), Mockito.<UUID>any(), Mockito.<Timestamp>any(),
+                        Mockito.<Timestamp>any(), Mockito.<String>any());
+
+        // Act
+        boolean actualCreateNewUserSubscriptionResult = userSubscriptionService.createNewUserSubscription(UUID.randomUUID(),
+                "Payment Status");
+
+        // Assert
+        verify(userRepo).findByUserID(isA(UUID.class));
+        verify(userSubscriptionRepo).getPlanID(eq("FREE"));
+        verify(userSubscriptionRepo).upsertSubscription(isA(UUID.class), isA(UUID.class), isA(UUID.class),
+                isA(Timestamp.class), isA(Timestamp.class), eq("Payment Status"));
+        assertTrue(actualCreateNewUserSubscriptionResult);
     }
 }
