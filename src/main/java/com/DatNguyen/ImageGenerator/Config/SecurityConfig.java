@@ -25,7 +25,8 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/v3/api-docs.yaml",
             "/webjars/**",
-            "/auth/**"
+            "/auth/**",
+            "/h2-console/**",
     };
 
     @Autowired
