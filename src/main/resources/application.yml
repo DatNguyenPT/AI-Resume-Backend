@@ -1,0 +1,26 @@
+server:
+  port: 8088
+
+spring:
+  profiles:
+    active: local
+  application:
+    name: API-Gateway
+  cloud:
+    gateway:
+      # Load balanced via Eureka
+          routes:
+            - id: auth-service
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/auth/**
+
+            - id: subscription-service
+              uri: lb://SUBSCRIPTION-SERVICE
+              predicates:
+                - Path=/subscription/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
