@@ -34,6 +34,6 @@ build/
 
 .qodo
 
-.env
+src/main/resources/.env
 
 !**/src/main/**/resources/application-cicd.properties
