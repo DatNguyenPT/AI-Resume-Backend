@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: Eureka-Server
+
+server:
+  port: 8761
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: false  # Don't register itself
+    fetch-registry: false
