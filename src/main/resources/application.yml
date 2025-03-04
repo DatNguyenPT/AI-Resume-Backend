@@ -1,7 +1,8 @@
 server:
   port: 8088
-
 spring:
+  config:
+    import: optional:file:.env[.properties]
   profiles:
     active: local
   application:
@@ -23,4 +24,4 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${local_eureka_server}
