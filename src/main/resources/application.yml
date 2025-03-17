@@ -6,7 +6,7 @@ spring:
   ai:
     ollama:
       chat:
-        model: deepseek-r1:latest
+        model: deepseek-r1:1.5b
       base-url: ${local_ollama_base_url} # Local Model
   data:
     mongodb:
