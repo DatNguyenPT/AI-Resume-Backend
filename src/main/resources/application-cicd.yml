@@ -2,7 +2,7 @@ spring:
   config:
     import: optional:file:.env[.properties]
   datasource:
-    url: ${SUB_DB_LOCAL_URL}
+    url: jdbc:postgresql://subscription-db:5432/subscription
     username: ${SUB_DB_LOCAL_USER}
     password: ${SUB_DB_LOCAL_PASS}
     driver-class-name: org.postgresql.Driver
@@ -15,7 +15,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${local_eureka_server}
+      defaultZone: http://eureka-server:8761/eureka/
   fetch-registry: true
   registerWithEureka: true
 
