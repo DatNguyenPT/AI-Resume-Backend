@@ -7,7 +7,7 @@ spring:
     ollama:
       chat:
         model: deepseek-r1:1.5b
-      base-url: ${local_ollama_base_url} # Local Model
+      base-url: http://ollama-service:11434
   data:
     mongodb:
       authentication-database: ${authentication_database}
@@ -20,7 +20,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${local_eureka_server}
+      defaultZone: http://eureka-server:8761/eureka/
     fetch-registry: true
     registerWithEureka: true
 
