@@ -22,7 +22,7 @@ public class SwaggerConfig {
     @Bean
     OpenAPI customOpenAPI() {
         return new OpenAPI()
-                .info(new Info().title("Image Generator API").version("1.0"))
+                .info(new Info().title("AI RESUME BUILDER APIs").version("1.0"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(
                         new Components()
