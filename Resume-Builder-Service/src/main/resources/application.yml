@@ -1,0 +1,45 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: RESUME-BUILDER-SERVICE
+  ai:
+    ollama:
+      chat:
+        model: deepseek-r1:1.5b
+      base-url: ${local_ollama_base_url} # Local Model
+  data:
+    mongodb:
+      authentication-database: ${authentication_database}
+      username: ${local_username}
+      password: ${local_password}
+      database: ${mongo_database}
+      port: 27017
+      host: localhost  # Assuming it's running locally
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${local_eureka_server}
+    fetch-registry: true
+    registerWithEureka: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+server:
+  port: 8083
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  api-docs:
+    enabled: true
+    path: /v3/api-docs

@@ -1,0 +1,40 @@
+version: "3.9"
+services:
+  subscription-db:
+    image: postgres:16.8
+    container_name: subscription-db
+    restart: on-failure
+    ports:
+      - 5433:5432
+
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${SUB_DB_LOCAL_USER}
+      POSTGRES_PASSWORD: ${SUB_DB_LOCAL_PASS}
+      POSTGRES_DB: subscription
+    volumes:
+      - sub_data:/var/lib/postgresql/data
+
+  sub-service:
+    build:
+      context: Subscription-Service
+      dockerfile: Dockerfile
+    container_name: sub-service
+    ports:
+      - 8082:8082
+    env_file:
+      - .env
+    environment:
+      DB_SERVER: subscription-db
+      POSTGRES_DB: subscription
+      POSTGRES_USER: ${SUB_DB_LOCAL_USER}
+      POSTGRES_PASSWORD: ${SUB_DB_LOCAL_PASS}
+      SPRING_PROFILES_ACTIVE: cicd
+    depends_on:
+      - eureka-server
+      - subscription-db
+
+volumes:
+  sub_data:
+

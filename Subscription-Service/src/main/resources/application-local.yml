@@ -1,0 +1,38 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${SUB_DB_LOCAL_URL}
+    username: ${SUB_DB_LOCAL_USER}
+    password: ${SUB_DB_LOCAL_PASS}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+eureka:
+  client:
+    service-url:
+      defaultZone: ${local_eureka_server}
+  fetch-registry: true
+  registerWithEureka: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+freeuuid: ${FREE_UUID}
+premiumuuid: ${PREMIUM_UUID}
+
+
+
+
+
+

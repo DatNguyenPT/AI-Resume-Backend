@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  eureka-server:
+    build:
+      context: Eureka-Server
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - 8761:8761
+    container_name: eureka-server
+
+  api-gateway:
+    build:
+      context: API-Gateway
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: cicd
+    env_file:
+      - .env
+    depends_on:
+      - eureka-server
+    ports:
+      - 8088:8088
+    container_name: api-gateway
+

@@ -1,0 +1,23 @@
+{
+  "_links": {
+    "self": {
+      "href": "http://localhost:8080/actuator",
+      "templated": false
+    },
+    "features-arg0": {
+      "href": "http://localhost:8080/actuator/features/{arg0}",
+      "templated": true
+    },
+    "features": {
+      "href": "http://localhost:8080/actuator/features",
+      "templated": false
+    },
+    "beans": {
+      "href": "http://localhost:8080/actuator/beans",
+      "templated": false
+    },
+    "caches-cache": {
+      "href": "http://localhost:8080/actuator/caches/{cache}",
+      "templated": true
+    }
+}

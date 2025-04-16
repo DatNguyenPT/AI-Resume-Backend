@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+  auth-db:
+    image: postgres:16.8
+    container_name: auth-db
+    restart: on-failure
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${AUTH_DB_LOCAL_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_LOCAL_PASS}
+      POSTGRES_DB: auth
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+
+  token-cache:
+    image: redis:alpine
+    container_name: token-blacklist
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  auth-service:
+    build:
+      context: ImageGenerator
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - 8081:8081
+    env_file:
+      - .env
+    environment:
+      DB_SERVER: auth-db
+      POSTGRES_DB: auth
+      POSTGRES_USER: ${AUTH_DB_LOCAL_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_LOCAL_PASS}
+      SPRING_PROFILES_ACTIVE: cicd
+    depends_on:
+      - eureka-server
+      - auth-db
+      - token-cache
+
+volumes:
+  auth_data:
+  redis_data:

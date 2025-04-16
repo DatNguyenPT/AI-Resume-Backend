@@ -1,0 +1,102 @@
+server:
+  port: 8088
+spring:
+#  main:
+#    web-application-type: reactive
+  config:
+    import: optional:file:.env[.properties]
+  profiles:
+    active: local
+  application:
+    name: API-Gateway
+  cloud:
+    gateway:
+      # Load balanced via Eureka
+
+            # ====================================================
+            #             AUTH SERVICE CONFIGURATION
+            # ====================================================
+
+          routes:
+            - id: auth-service-register
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/auth/register
+                - Method=POST
+
+            - id: auth-service-login
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/auth/login
+                - Method=POST
+
+            - id: auth-service-logout
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/auth/logout
+                - Method=POST
+
+            - id: auth-service-otp
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/auth/otp
+                - Method=GET
+
+            - id: auth-service-userID
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/user/{userID}
+                - Method=GET
+
+            # ============================================================
+            #             SUBSCRIPTION SERVICE CONFIGURATION
+            # ============================================================
+
+            - id: subscription-service
+              uri: lb://SUBSCRIPTION-SERVICE
+              predicates:
+                - Path=/subscription/create
+                - Method=POST
+              filters:
+                - JwtAuthenticationFilter=subscription-service
+
+            # ============================================================
+            #             RESUME GENERATOR SERVICE CONFIGURATION
+            # ============================================================
+
+            - id: resume-builder-service
+              uri: lb://RESUME-BUILDER-SERVICE
+              predicates:
+                - Path=/resume/generate
+                - Method=POST
+              filters:
+                - JwtAuthenticationFilter=resume-builder-service
+  url:
+    - id: auth
+      uri: http://localhost:8081/auth/
+    - id: subscription
+      uri: http://localhost:8082/subscription/
+    - id: resume
+      uri: http://localhost:8083/resume/
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${local_eureka_server}
+    registerWithEureka: true
+    fetch-registry: true
+
+
+jwt:
+  secret_key: ${JWT_SECRET_KEY}
+
+api-doc:
+  path: /swagger-ui/index.html
+  routes:
+  - id: auth-service-api-docs
+    url: http://localhost:8081/
+  - id: subscription-service-api-docs
+    url: http://localhost:8082/
+  - id: resume-service-api-docs
+    url: http://localhost:8083/
+

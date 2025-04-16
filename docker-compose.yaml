@@ -1,0 +1,165 @@
+version: "3.9"
+services:
+  eureka-server:
+    build:
+      context: Eureka-Server
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - 8761:8761
+    container_name: eureka-server
+
+  api-gateway:
+    build:
+      context: API-Gateway
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: cicd
+    env_file:
+      - .env
+    depends_on:
+      - eureka-server
+    ports:
+      - 8088:8088
+    container_name: api-gateway
+
+  auth-db:
+    image: postgres:16.8
+    container_name: auth-db
+    restart: on-failure
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${AUTH_DB_LOCAL_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_LOCAL_PASS}
+      POSTGRES_DB: auth
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+
+  subscription-db:
+    image: postgres:16.8
+    container_name: subscription-db
+    restart: on-failure
+    ports:
+      - 5433:5432
+
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${SUB_DB_LOCAL_USER}
+      POSTGRES_PASSWORD: ${SUB_DB_LOCAL_PASS}
+      POSTGRES_DB: subscription
+    volumes:
+      - sub_data:/var/lib/postgresql/data
+
+  token-cache:
+    image: redis:alpine
+    container_name: token-blacklist
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  resume-db:
+    image: mongo:6.0
+    container_name: resume-db
+    ports:
+      - "27020:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${local_username}
+      MONGO_INITDB_ROOT_PASSWORD: ${local_password}
+      MONGO_INITDB_DATABASE: ${mongo_database}
+    volumes:
+      - resume_data:/data/db
+
+  ollama-service:
+    container_name: ollama-service
+    build:
+      dockerfile: Dockerfile
+    pull_policy: always
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_NUM_PARALLEL=4
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_MODELS=/usr/share/ollama/.ollama/models
+    healthcheck:
+      test: "ollama --version && ollama ps || exit 1"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    volumes:
+      - ollama_data:/usr/share/ollama/.ollama/models
+
+  auth-service:
+    build:
+      context: ImageGenerator
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - 8081:8081
+    env_file:
+      - .env
+    environment:
+      DB_SERVER: auth-db
+      POSTGRES_DB: auth
+      POSTGRES_USER: ${AUTH_DB_LOCAL_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_LOCAL_PASS}
+      SPRING_PROFILES_ACTIVE: cicd
+    depends_on:
+      - eureka-server
+      - auth-db
+      - token-cache
+
+  sub-service:
+    build:
+      context: Subscription-Service
+      dockerfile: Dockerfile
+    container_name: sub-service
+    ports:
+      - 8082:8082
+    env_file:
+      - .env
+    environment:
+      DB_SERVER: subscription-db
+      POSTGRES_DB: subscription
+      POSTGRES_USER: ${SUB_DB_LOCAL_USER}
+      POSTGRES_PASSWORD: ${SUB_DB_LOCAL_PASS}
+      SPRING_PROFILES_ACTIVE: cicd
+    depends_on:
+      - eureka-server
+      - subscription-db
+
+  resume-service:
+    build:
+      context: Resume-Builder-Service
+      dockerfile: Dockerfile
+    container_name: resume-service
+    ports:
+      - 8083:8083
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: mongodb://${local_username}:${local_password}@resume-db:27017/${mongo_database}?authSource=admin
+      SPRING_PROFILES_ACTIVE: cicd
+    depends_on:
+      - resume-db
+      - ollama-service
+volumes:
+  auth_data:
+  sub_data:
+  resume_data:
+  redis_data:
+  ollama_data:
